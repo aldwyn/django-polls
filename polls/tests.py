@@ -35,7 +35,7 @@ class PollViewTest(TestCase):
 		self.assertQuerysetEqual(response.context['latest_poll_list'], ['<Poll: Past poll.>'])
 
 	def test_index_with_a_future_poll(self):
-		create_poll(question='Future poll.', days=-30)
+		create_poll(question='Future poll.', days=30)
 		response = self.client.get(reverse('polls:index'))
 		self.assertContains(response, 'No polls are available.', status_code=200)
 		self.assertQuerysetEqual(response.context['latest_poll_list'], [])
@@ -51,3 +51,15 @@ class PollViewTest(TestCase):
 		create_poll(question='Past poll 2.', days=-5)
 		response = self.client.get(reverse('polls:index'))
 		self.assertQuerysetEqual(response.context['latest_poll_list'], ['<Poll: Past poll 2.>', '<Poll: Past poll 1.>'])
+
+
+class PollIndexDetailTests(TestCase):
+	def test_detail_view_with_a_future_poll(self):
+		future_poll = create_poll(question='Future poll.', days=5)
+		response = self.client.get(reverse('polls:detail', args=(future_poll.id,)))
+		self.assertEqual(response.status_code, 200)
+
+	def test_detail_view_with_a_past_poll(self):
+		past_poll = create_poll(question='Past poll.', days=5)
+		response = self.client.get(reverse('polls:detail', args=(past_poll.id,)))
+		self.assertContains(response, past_poll.question, status_code=200)
